@@ -1,22 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 
-import { PointNumber } from './pointNumber/pointNumber.model';
-import { PointDouble } from './pointDouble/pointDouble.model';
-import { PointBoolean } from './pointBoolean/pointBoolean.model';
-import { PointDate } from './pointDate/pointDate.model';
 import { Point } from './point.model';
-
 
 @Injectable()
 export class PointService {
-    constructor(
-        @InjectModel('Point') private readonly pointModel: Model<Point>,
-        @InjectModel('PointNumber') private readonly pointNumberModel: Model<PointNumber>,
-        @InjectModel('PointDouble') private readonly pointDoubleModel: Model<PointDouble>,
-        @InjectModel('PointBoolean') private readonly pointBooleanModel: Model<PointBoolean>,
-        @InjectModel('PointDate') private readonly pointDateModel: Model<PointDate>) {}
+    constructor(@InjectModel('Point') private readonly pointModel: Model<Point>) {}
 
     async findAll(): Promise<Point[]> {
         return this.pointModel.find().exec();
@@ -31,55 +21,18 @@ export class PointService {
     }
 
     async create(doc: Point) {
-        let pointModel;
-        switch (doc.dataType) {
-            case 'number':
-                pointModel = await new this.pointNumberModel(doc).save();
-                break;
-            case 'decimal':
-                pointModel = await new this.pointDoubleModel(doc).save();
-                break;
-            case 'boolean':
-                pointModel = await new this.pointBooleanModel(doc).save();
-                break;
-            case 'dateTime':
-                pointModel = await new this.pointDateModel(doc).save();
-                break;
-            default:
-                throw new Error('Invalid dataType');
-        }
-        return pointModel.id;
+        this.validatePoint(doc);
+        const result = await new this.pointModel(doc).save();
+        return result.id;
     }
-
+    
     async update(id: string, point: Point): Promise<Point> {
-        console.log('ENTROU AQUI. ID ' + id +  ' POINT: ' + point)
-
-        let pointModel;
-        switch (point.dataType) {
-            case 'number':
-                pointModel = this.pointNumberModel;
-                pointModel = await this.pointNumberModel.findByIdAndUpdate(id, pointModel, { new: true }).exec();
-                break;
-            case 'decimal':
-                pointModel = this.pointDoubleModel;
-                pointModel = await this.pointDoubleModel.findByIdAndUpdate(id, pointModel, { new: true }).exec();
-                break;
-            case 'boolean':
-                pointModel = this.pointBooleanModel;
-                pointModel = await this.pointBooleanModel.findByIdAndUpdate(id, pointModel, { new: true }).exec();
-                break;
-            case 'dateTime':
-                pointModel = this.pointDateModel;
-                pointModel = await this.pointDateModel.findByIdAndUpdate(id, pointModel, { new: true }).exec();
-                break;
-            default:
-                throw new Error('Invalid dataType');
-        }
-        
-        if (!pointModel) {
+        this.validatePoint(point);
+        const updatedPoint = await this.pointModel.findByIdAndUpdate(id, point, { new: true }).exec();
+        if (!updatedPoint) {
             throw new NotFoundException('Point not found');
         }
-        return pointModel;
+        return updatedPoint;
     }
 
     async remove(id: string): Promise<Point> {
@@ -89,4 +42,32 @@ export class PointService {
         }
         return deletedPoint;
     }
+
+    private validatePoint(point: Point) {
+        switch (point.dataType) {
+          case 'boolean':
+            if (typeof point.value !== 'boolean') {
+              throw new BadRequestException('Value must be a boolean for dataType boolean');
+            }
+            break;
+          case 'number':
+            if (typeof point.value !== 'number') {
+              throw new BadRequestException('Value must be a number for dataType number');
+            }
+            break;
+          case 'date':
+            const dateRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+            if (!dateRegex.test(point.value)) {
+              throw new BadRequestException('Value must be a valid date in ISO-8601 format for dataType date');
+            }
+            break;
+          default:
+            throw new BadRequestException('Invalid dataType');
+        }
+
+        if(!point.equipment){
+            throw new BadRequestException("Can't save Point without Equipment");
+        }
+      }
+
 }
