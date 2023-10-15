@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import * as mongoose from 'mongoose';
 import { Equipment } from 'src/equipment/equipment.model';
 
@@ -15,6 +16,17 @@ export interface Point {
     id: string;
     name: string;
     dataType: string,
-    equipment: Equipment;
+    equipmentId: Equipment;
     value: any;
+}
+
+export class PointDto {
+    @ApiProperty()
+    readonly name: string;
+    @ApiProperty()
+    readonly dataType: string;
+    @ApiProperty()
+    readonly value: number | boolean | Date;
+    @ApiProperty()
+    readonly equipmentId: string;
 }

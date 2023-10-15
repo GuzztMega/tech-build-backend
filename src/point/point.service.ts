@@ -64,7 +64,7 @@ export class PointService {
             throw new BadRequestException('Invalid dataType');
         }
 
-        if(!point.equipment){
+        if(!point.equipmentId){
             throw new BadRequestException("Can't save Point without Equipment");
         }
       }
