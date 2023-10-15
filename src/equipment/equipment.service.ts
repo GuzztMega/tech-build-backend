@@ -9,8 +9,7 @@ export class EquipmentService {
     constructor(@InjectModel('Equipment') private readonly equipmentModel: Model<Equipment>) {}
 
     async create(doc: Equipment) {
-        const result = await new this.equipmentModel(doc).save();
-        return result.id;
+        return await new this.equipmentModel(doc).save();
     }
 
     async findAll(): Promise<Equipment[]> {

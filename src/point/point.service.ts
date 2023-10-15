@@ -22,8 +22,7 @@ export class PointService {
 
     async create(doc: Point) {
         this.validatePoint(doc);
-        const result = await new this.pointModel(doc).save();
-        return result.id;
+        return await new this.pointModel(doc).save();
     }
     
     async update(id: string, point: Point): Promise<Point> {
