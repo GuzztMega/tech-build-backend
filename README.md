@@ -1,10 +1,13 @@
 # Techbuild
 
-Rota para testes backend:
+Rotas backend:
 
  - http://localhost:3000/equipment
    
  - http://localhost:3000/point
-   
 
-Comando para iniciar backend:  `npm run start:dev`
+ - Documentação http://localhost:3000/api
+
+Comando para iniciar backend:  `npm run start`
+
+![Documentação Swagger](src/assets/swagger.jpg)
